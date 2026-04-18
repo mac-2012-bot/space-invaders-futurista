@@ -554,18 +554,25 @@
         }
         
         function createInvaders() {
+            const container = document.getElementById('game-container');
+            const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
+            
             const rows = 4;
             const cols = 8;
-            const padding = 60;
-            const spacing = 60;
+            const padding = containerWidth * 0.05;
+            const spacing = (containerWidth - padding * 2) / (cols - 1);
+            const invaderSize = Math.min(50, containerWidth / cols);
+            
+            gameState.invaders = [];
             
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     gameState.invaders.push({
                         x: padding + c * spacing,
-                        y: 50 + r * spacing,
-                        width: 40,
-                        height: 40,
+                        y: 50 + r * (invaderSize * 1.5),
+                        width: invaderSize,
+                        height: invaderSize,
                         alive: true
                     });
                 }
@@ -578,13 +585,15 @@
             const shipElement = document.getElementById('ship');
             const shipLeft = parseInt(shipElement.style.left) || 400;
             const shipBottom = parseInt(shipElement.style.bottom) || 20;
+            const container = document.getElementById('game-container');
+            const containerHeight = container.offsetHeight;
             
             const bullet = {
                 x: shipLeft + 28,
-                y: 600 - shipBottom - 20,
-                width: 4,
-                height: 15,
-                speed: 8
+                y: containerHeight - shipBottom - 20,
+                width: Math.max(2, containerWidth / 200),
+                height: Math.max(8, containerWidth / 100),
+                speed: Math.max(5, containerWidth / 100)
             };
             
             gameState.bullets.push(bullet);
@@ -592,27 +601,24 @@
         
         function updateShipPosition() {
             const shipElement = document.getElementById('ship');
-            let left = parseInt(shipElement.style.left) || 400;
+            const container = document.getElementById('game-container');
+            const containerWidth = container.offsetWidth;
+            
+            let left = parseInt(shipElement.style.left) || (containerWidth / 2 - 30);
             
             // Keyboard controls
             if (keys.ArrowLeft && left > 20) {
                 left -= 8;
             }
-            if (keys.ArrowRight && left < 740) {
+            if (keys.ArrowRight && left < containerWidth - 60) {
                 left += 8;
-            }
-            if (keys.ArrowUp && parseInt(shipElement.style.bottom) < 580) {
-                shipElement.style.bottom = (parseInt(shipElement.style.bottom) || 20) + 8 + 'px';
-            }
-            if (keys.ArrowDown && parseInt(shipElement.style.bottom) > 20) {
-                shipElement.style.bottom = (parseInt(shipElement.style.bottom) || 20) - 8 + 'px';
             }
             
             // Touch controls
             if (touchControls.left && left > 20) {
                 left -= 8;
             }
-            if (touchControls.right && left < 740) {
+            if (touchControls.right && left < containerWidth - 60) {
                 left += 8;
             }
             
@@ -620,6 +626,9 @@
         }
         
         function updateBullets() {
+            const container = document.getElementById('game-container');
+            const containerHeight = container.offsetHeight;
+            
             // Update player bullets
             for (let i = gameState.bullets.length - 1; i >= 0; i--) {
                 const bullet = gameState.bullets[i];
@@ -661,12 +670,15 @@
         }
         
         function updateEnemyBullets() {
+            const container = document.getElementById('game-container');
+            const containerHeight = container.offsetHeight;
+            
             for (let i = gameState.enemyBullets.length - 1; i >= 0; i--) {
                 const bullet = gameState.enemyBullets[i];
                 bullet.y += bullet.speed;
                 
                 // Remove bullets that go off screen
-                if (bullet.y > 600) {
+                if (bullet.y > containerHeight) {
                     gameState.enemyBullets.splice(i, 1);
                     continue;
                 }
@@ -675,7 +687,7 @@
                 const shipElement = document.getElementById('ship');
                 const shipRect = {
                     x: parseInt(shipElement.style.left),
-                    y: 600 - parseInt(shipElement.style.bottom) - 40,
+                    y: containerHeight - parseInt(shipElement.style.bottom) - 40,
                     width: 60,
                     height: 40
                 };
@@ -691,10 +703,13 @@
             let moveDown = false;
             let hitEdge = false;
             
+            const container = document.getElementById('game-container');
+            const containerWidth = container.offsetWidth;
+            
             // Check if any invader hit the edge
             for (const invader of gameState.invaders) {
                 if (invader.alive) {
-                    if ((invader.x + invader.width > 760 && gameState.invaderDirection > 0) ||
+                    if ((invader.x + invader.width > containerWidth - 20 && gameState.invaderDirection > 0) ||
                         (invader.x < 20 && gameState.invaderDirection < 0)) {
                         hitEdge = true;
                         break;
