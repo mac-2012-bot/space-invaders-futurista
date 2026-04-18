@@ -358,8 +358,7 @@
         // Touch Controls
         const touchControls = {
             left: false,
-            right: false,
-            shoot: false
+            right: false
         };
         
         // Keyboard State
@@ -488,17 +487,28 @@
             touchControls.right = false;
         });
         
+        let shootActive = false;
+        
         shootButton.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            touchControls.shoot = true;
-            if (gameState.gameActive) {
+            if (gameState.gameActive && !shootActive) {
                 shoot();
+                shootActive = true;
+                
+                // Auto-repeat shooting while holding button
+                const shootInterval = setInterval(() => {
+                    if (gameState.gameActive) {
+                        shoot();
+                    } else {
+                        clearInterval(shootInterval);
+                    }
+                }, 300);
+                
+                shootButton.addEventListener('touchend', () => {
+                    clearInterval(shootInterval);
+                    shootActive = false;
+                }, { once: true });
             }
-        });
-        
-        shootButton.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            touchControls.shoot = false;
         });
         
         // Prevent default touch behavior
