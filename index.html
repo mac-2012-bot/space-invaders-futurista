@@ -239,11 +239,11 @@
         
         #ship {
             position: absolute;
-            bottom: 20px;
+            bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 40px;
+            width: 40px;
+            height: 25px;
             background: linear-gradient(45deg, #00f0ff, #00a0ff);
             clip-path: polygon(0% 50%, 25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%);
             animation: float 2s ease-in-out infinite;
@@ -556,13 +556,12 @@
         function createInvaders() {
             const container = document.getElementById('game-container');
             const containerWidth = container.offsetWidth;
-            const containerHeight = container.offsetHeight;
             
             const rows = 4;
             const cols = 8;
             const padding = containerWidth * 0.05;
             const spacing = (containerWidth - padding * 2) / (cols - 1);
-            const invaderSize = Math.min(50, containerWidth / cols);
+            const invaderSize = Math.min(30, containerWidth / cols);
             
             gameState.invaders = [];
             
@@ -570,7 +569,7 @@
                 for (let c = 0; c < cols; c++) {
                     gameState.invaders.push({
                         x: padding + c * spacing,
-                        y: 50 + r * (invaderSize * 1.5),
+                        y: 30 + r * (invaderSize * 1.5),
                         width: invaderSize,
                         height: invaderSize,
                         alive: true
@@ -586,14 +585,15 @@
             const shipLeft = parseInt(shipElement.style.left) || 400;
             const shipBottom = parseInt(shipElement.style.bottom) || 20;
             const container = document.getElementById('game-container');
+            const containerWidth = container.offsetWidth;
             const containerHeight = container.offsetHeight;
             
             const bullet = {
                 x: shipLeft + 28,
                 y: containerHeight - shipBottom - 20,
-                width: Math.max(2, containerWidth / 200),
-                height: Math.max(8, containerWidth / 100),
-                speed: Math.max(5, containerWidth / 100)
+                width: Math.max(2, containerWidth / 250),
+                height: Math.max(6, containerWidth / 150),
+                speed: Math.max(6, containerWidth / 120)
             };
             
             gameState.bullets.push(bullet);
@@ -604,22 +604,22 @@
             const container = document.getElementById('game-container');
             const containerWidth = container.offsetWidth;
             
-            let left = parseInt(shipElement.style.left) || (containerWidth / 2 - 30);
+            let left = parseInt(shipElement.style.left) || (containerWidth / 2 - 20);
             
             // Keyboard controls
-            if (keys.ArrowLeft && left > 20) {
-                left -= 8;
+            if (keys.ArrowLeft && left > 10) {
+                left -= 6;
             }
-            if (keys.ArrowRight && left < containerWidth - 60) {
-                left += 8;
+            if (keys.ArrowRight && left < containerWidth - 40) {
+                left += 6;
             }
             
             // Touch controls
-            if (touchControls.left && left > 20) {
-                left -= 8;
+            if (touchControls.left && left > 10) {
+                left -= 6;
             }
-            if (touchControls.right && left < containerWidth - 60) {
-                left += 8;
+            if (touchControls.right && left < containerWidth - 40) {
+                left += 6;
             }
             
             shipElement.style.left = left + 'px';
