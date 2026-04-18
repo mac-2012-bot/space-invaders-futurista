@@ -575,9 +575,13 @@
         function shoot() {
             if (!gameState.gameActive) return;
             
+            const shipElement = document.getElementById('ship');
+            const shipLeft = parseInt(shipElement.style.left) || 400;
+            const shipBottom = parseInt(shipElement.style.bottom) || 20;
+            
             const bullet = {
-                x: parseInt(ship.style.left) + 28,
-                y: parseInt(ship.style.bottom) - 20,
+                x: shipLeft + 28,
+                y: 600 - shipBottom - 20,
                 width: 4,
                 height: 15,
                 speed: 8
