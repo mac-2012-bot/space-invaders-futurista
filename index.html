@@ -20,16 +20,21 @@
         }
         
         #game-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            height: 600px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
-            border: 2px solid #00f0ff;
-            border-radius: 10px;
-            box-shadow: 0 0 30px #00f0ff;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
             overflow: hidden;
-            margin: 20px auto;
+            z-index: 1;
+        }
+        
+        body.game-active {
+            overflow: hidden;
         }
         
         @media (max-width: 768px) {
@@ -546,6 +551,9 @@
             gameState.gameActive = true;
             gameState.lastInvaderShot = Date.now();
             
+            // Set body class to prevent scrolling
+            document.body.classList.add('game-active');
+            
             if (gameState.gameLoopId) {
                 clearInterval(gameState.gameLoopId);
             }
@@ -556,12 +564,13 @@
         function createInvaders() {
             const container = document.getElementById('game-container');
             const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
             
             const rows = 4;
             const cols = 8;
             const padding = containerWidth * 0.05;
             const spacing = (containerWidth - padding * 2) / (cols - 1);
-            const invaderSize = Math.min(30, containerWidth / cols);
+            const invaderSize = Math.min(35, containerWidth / cols);
             
             gameState.invaders = [];
             
@@ -569,7 +578,7 @@
                 for (let c = 0; c < cols; c++) {
                     gameState.invaders.push({
                         x: padding + c * spacing,
-                        y: 30 + r * (invaderSize * 1.5),
+                        y: 40 + r * (invaderSize * 1.8),
                         width: invaderSize,
                         height: invaderSize,
                         alive: true
@@ -773,6 +782,9 @@
         function gameOver() {
             gameState.gameActive = false;
             clearInterval(gameState.gameLoopId);
+            
+            // Remove body class
+            document.body.classList.remove('game-active');
             
             finalScoreDisplay.textContent = `Pontuação Final: ${gameState.score}`;
             gameOverScreen.classList.add('visible');
