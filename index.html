@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula Invaders - Space Invaders Futurista</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a1a;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: #00f0ff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 100%);
+            border: 2px solid #00f0ff;
+            border-radius: 10px;
+            box-shadow: 0 0 30px #00f0ff;
+            overflow: hidden;
+        }
+        
+        #game-canvas {
+            background: #000;
+            display: block;
+        }
+        
+        #hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00f0ff;
+        }
+        
+        #score-display, #lives-display, #level-display {
+            background: rgba(0, 30, 50, 0.7);
+            padding: 8px 16px;
+            border-radius: 5px;
+            border: 1px solid #00f0ff;
+        }
+        
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+        
+        #start-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        #title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #00f0ff;
+            animation: pulse 2s infinite;
+        }
+        
+        #subtitle {
+            font-size: 20px;
+            margin-bottom: 40px;
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        #controls-info {
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        #start-button {
+            background: linear-gradient(45deg, #00f0ff, #00a0ff);
+            color: #0a0a1a;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px #00f0ff;
+        }
+        
+        #start-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px #00f0ff;
+        }
+        
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        #game-over-screen.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        #game-over-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #ff0055;
+            text-shadow: 0 0 20px #ff0055;
+        }
+        
+        #restart-button {
+            background: linear-gradient(45deg, #ff0055, #ff5577);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px #ff0055;
+        }
+        
+        #restart-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px #ff0055;
+        }
+        
+        #final-score {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { text-shadow: 0 0 20px #00f0ff; }
+            50% { text-shadow: 0 0 30px #00a0ff, 0 0 40px #00f0ff; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        #ship {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(45deg, #00f0ff, #00a0ff);
+            clip-path: polygon(0% 50%, 25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%);
+            animation: float 2s ease-in-out infinite;
+        }
+        
+        .invader {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #ff0055, #ff5577);
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            animation: float 1.5s ease-in-out infinite;
+        }
+        
+        .bullet {
+            position: absolute;
+            width: 4px;
+            height: 15px;
+            background: linear-gradient(45deg, #00f0ff, #00a0ff);
+            border-radius: 2px;
+        }
+        
+        .enemy-bullet {
+            position: absolute;
+            width: 4px;
+            height: 15px;
+            background: linear-gradient(45deg, #ff0055, #ff5577);
+            border-radius: 2px;
+        }
+        
+        #explosion {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(255,0,85,0.8) 0%, rgba(255,0,85,0.1) 70%);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        @keyframes shoot {
+            0%, 100% { transform: translateY(0px); opacity: 1; }
+            100% { transform: translateY(-600px); opacity: 0; }
+        }
+        
+        @keyframes enemy-shoot {
+            0%, 100% { transform: translateY(0px); opacity: 1; }
+            100% { transform: translateY(600px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="800" height="600"></canvas>
+        
+        <div id="hud">
+            <div id="score-display">SCORE: 0</div>
+            <div id="lives-display">LIVES: 3</div>
+            <div id="level-display">LEVEL: 1</div>
+        </div>
+        
+        <div id="ship"></div>
+        
+        <div id="start-screen">
+            <h1 id="title">NEBULA INVADERS</h1>
+            <p id="subtitle">Defende a estação espacial contra ondas de invasores alienígenas num futuro distópico!</p>
+            <p id="controls-info">↑ ↓ ← → : Mover | ESPAÇO : Atirar</p>
+            <button id="start-button">INICIAR MISSÃO</button>
+        </div>
+        
+        <div id="game-over-screen">
+            <h1 id="game-over-title">MISSÃO FALHADA</h1>
+            <p id="final-score">Pontuação Final: 0</p>
+            <button id="restart-button">TENTAR NOVAMENTE</button>
+        </div>
+        
+        <div id="explosion"></div>
+    </div>
+    
+    <script>
+        // Game State
+        const gameState = {
+            score: 0,
+            lives: 3,
+            level: 1,
+            gameActive: false,
+            invaders: [],
+            bullets: [],
+            enemyBullets: [],
+            invaderDirection: 1,
+            invaderSpeed: 1,
+            invaderMoveDown: false,
+            lastInvaderShot: 0,
+            gameLoopId: null
+        };
+        
+        // DOM Elements
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score-display');
+        const livesDisplay = document.getElementById('lives-display');
+        const levelDisplay = document.getElementById('level-display');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const ship = document.getElementById('ship');
+        const explosion = document.getElementById('explosion');
+        
+        // Keyboard State
+        const keys = {
+            ArrowLeft: false,
+            ArrowRight: false,
+            ArrowUp: false,
+            ArrowDown: false,
+            ' ': false
+        };
+        
+        // Event Listeners
+        document.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = true;
+                
+                // Shooting
+                if (e.key === ' ' && gameState.gameActive) {
+                    shoot();
+                }
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = false;
+            }
+        });
+        
+        startButton.addEventListener('click', startGame);
+        restartButton.addEventListener('click', startGame);
+        
+        // Game Functions
+        function startGame() {
+            // Reset game state
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.level = 1;
+            gameState.invaders = [];
+            gameState.bullets = []
+            gameState.enemyBullets = [];
+            gameState.invaderDirection = 1;
+            gameState.invaderSpeed = 1;
+            gameState.invaderMoveDown = false;
+            
+            // Update HUD
+            updateHUD();
+            
+            // Hide screens
+            startScreen.classList.add('hidden');
+            gameOverScreen.classList.remove('visible');
+            
+            // Create initial invaders
+            createInvaders();
+            
+            // Start game loop
+            gameState.gameActive = true;
+            gameState.lastInvaderShot = Date.now();
+            
+            if (gameState.gameLoopId) {
+                clearInterval(gameState.gameLoopId);
+            }
+            
+            gameState.gameLoopId = setInterval(gameLoop, 16); // ~60 FPS
+        }
+        
+        function createInvaders() {
+            const rows = 4;
+            const cols = 8;
+            const padding = 60;
+            const spacing = 60;
+            
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    gameState.invaders.push({
+                        x: padding + c * spacing,
+                        y: 50 + r * spacing,
+                        width: 40,
+                        height: 40,
+                        alive: true
+                    });
+                }
+            }
+        }
+        
+        function shoot() {
+            if (!gameState.gameActive) return;
+            
+            const bullet = {
+                x: parseInt(ship.style.left) + 28,
+                y: parseInt(ship.style.bottom) - 20,
+                width: 4,
+                height: 15,
+                speed: 8
+            };
+            
+            gameState.bullets.push(bullet);
+        }
+        
+        function updateShipPosition() {
+            const shipElement = document.getElementById('ship');
+            let left = parseInt(shipElement.style.left) || 400;
+            
+            if (keys.ArrowLeft && left > 20) {
+                left -= 8;
+            }
+            if (keys.ArrowRight && left < 740) {
+                left += 8;
+            }
+            if (keys.ArrowUp && parseInt(shipElement.style.bottom) < 580) {
+                shipElement.style.bottom = (parseInt(shipElement.style.bottom) || 20) + 8 + 'px';
+            }
+            if (keys.ArrowDown && parseInt(shipElement.style.bottom) > 20) {
+                shipElement.style.bottom = (parseInt(shipElement.style.bottom) || 20) - 8 + 'px';
+            }
+            
+            shipElement.style.left = left + 'px';
+        }
+        
+        function updateBullets() {
+            // Update player bullets
+            for (let i = gameState.bullets.length - 1; i >= 0; i--) {
+                const bullet = gameState.bullets[i];
+                bullet.y -= bullet.speed;
+                
+                // Remove bullets that go off screen
+                if (bullet.y < 0) {
+                    gameState.bullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Check collision with invaders
+                for (let j = gameState.invaders.length - 1; j >= 0; j--) {
+                    const invader = gameState.invaders[j];
+                    if (invader.alive && checkCollision(bullet, invader)) {
+                        // Hit! Remove invader
+                        invader.alive = false;
+                        gameState.bullets.splice(i, 1);
+                        
+                        // Show explosion
+                        showExplosion(invader.x + invader.width/2, invader.y + invader.height/2);
+                        
+                        // Increase score
+                        gameState.score += 100;
+                        updateHUD();
+                        
+                        break;
+                    }
+                }
+            }
+            
+            // Remove dead invaders
+            gameState.invaders = gameState.invaders.filter(invader => invader.alive);
+            
+            // Check if all invaders are defeated
+            if (gameState.invaders.length === 0) {
+                levelUp();
+            }
+        }
+        
+        function updateEnemyBullets() {
+            for (let i = gameState.enemyBullets.length - 1; i >= 0; i--) {
+                const bullet = gameState.enemyBullets[i];
+                bullet.y += bullet.speed;
+                
+                // Remove bullets that go off screen
+                if (bullet.y > 600) {
+                    gameState.enemyBullets.splice(i, 1);
+                    continue;
+                }
+                
+                // Check collision with ship
+                const shipElement = document.getElementById('ship');
+                const shipRect = {
+                    x: parseInt(shipElement.style.left),
+                    y: 600 - parseInt(shipElement.style.bottom) - 40,
+                    width: 60,
+                    height: 40
+                };
+                
+                if (checkCollision(bullet, shipRect)) {
+                    gameState.enemyBullets.splice(i, 1);
+                    hitShip();
+                }
+            }
+        }
+        
+        function updateInvaders() {
+            let moveDown = false;
+            let hitEdge = false;
+            
+            // Check if any invader hit the edge
+            for (const invader of gameState.invaders) {
+                if (invader.alive) {
+                    if ((invader.x + invader.width > 760 && gameState.invaderDirection > 0) ||
+                        (invader.x < 20 && gameState.invaderDirection < 0)) {
+                        hitEdge = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (hitEdge) {
+                gameState.invaderDirection *= -1;
+                moveDown = true;
+            }
+            
+            // Move invaders
+            for (const invader of gameState.invaders) {
+                if (invader.alive) {
+                    invader.x += gameState.invaderSpeed * gameState.invaderDirection;
+                    if (moveDown) {
+                        invader.y += 20;
+                    }
+                }
+            }
+            
+            // Random enemy shooting
+            if (gameState.invaders.length > 0 && Date.now() - gameState.lastInvaderShot > 1500) {
+                const aliveInvaders = gameState.invaders.filter(inv => inv.alive);
+                if (aliveInvaders.length > 0) {
+                    const randomInvader = aliveInvaders[Math.floor(Math.random() * aliveInvaders.length)];
+                    
+                    const bullet = {
+                        x: randomInvader.x + randomInvader.width/2 - 2,
+                        y: randomInvader.y + randomInvader.height,
+                        width: 4,
+                        height: 15,
+                        speed: 5
+                    };
+                    
+                    gameState.enemyBullets.push(bullet);
+                    gameState.lastInvaderShot = Date.now();
+                }
+            }
+        }
+        
+        function levelUp() {
+            gameState.level++;
+            gameState.invaderSpeed += 0.5;
+            
+            // Create new invaders
+            createInvaders();
+            updateHUD();
+        }
+        
+        function hitShip() {
+            gameState.lives--;
+            updateHUD();
+            
+            if (gameState.lives <= 0) {
+                gameOver();
+            }
+        }
+        
+        function gameOver() {
+            gameState.gameActive = false;
+            clearInterval(gameState.gameLoopId);
+            
+            finalScoreDisplay.textContent = `Pontuação Final: ${gameState.score}`;
+            gameOverScreen.classList.add('visible');
+        }
+        
+        function showExplosion(x, y) {
+            explosion.style.left = (x - 40) + 'px';
+            explosion.style.top = (y - 40) + 'px';
+            explosion.style.opacity = '1';
+            
+            setTimeout(() => {
+                explosion.style.opacity = '0';
+            }, 500);
+        }
+        
+        function checkCollision(obj1, obj2) {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + obj1.width > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + obj1.height > obj2.y;
+        }
+        
+        function updateHUD() {
+            scoreDisplay.textContent = `SCORE: ${gameState.score}`;
+            livesDisplay.textContent = `LIVES: ${gameState.lives}`;
+            levelDisplay.textContent = `LEVEL: ${gameState.level}`;
+        }
+        
+        function gameLoop() {
+            if (!gameState.gameActive) return;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Update game state
+            updateShipPosition();
+            updateBullets();
+            updateEnemyBullets();
+            updateInvaders();
+            
+            // Draw bullets
+            ctx.fillStyle = '#00f0ff';
+            for (const bullet of gameState.bullets) {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            }
+            
+            // Draw enemy bullets
+            ctx.fillStyle = '#ff0055';
+            for (const bullet of gameState.enemyBullets) {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            }
+            
+            // Draw invaders
+            for (const invader of gameState.invaders) {
+                if (invader.alive) {
+                    ctx.fillStyle = '#ff0055';
+                    ctx.beginPath();
+                    ctx.moveTo(invader.x, invader.y + invader.height/2);
+                    ctx.lineTo(invader.x + invader.width/2, invader.y);
+                    ctx.lineTo(invader.x + invader.width, invader.y + invader.height/2);
+                    ctx.lineTo(invader.x + invader.width/2, invader.y + invader.height);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
+            
+            // Draw ship
+            ctx.fillStyle = '#00f0ff';
+            ctx.beginPath();
+            ctx.moveTo(parseInt(ship.style.left) + 30, 580 - parseInt(ship.style.bottom));
+            ctx.lineTo(parseInt(ship.style.left) + 10, 580 - parseInt(ship.style.bottom) + 40);
+            ctx.lineTo(parseInt(ship.style.left) + 50, 580 - parseInt(ship.style.bottom) + 40);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // Initialize ship position
+        ship.style.left = '400px';
+        ship.style.bottom = '20px';
+    </script>
+</body>
+</html>
